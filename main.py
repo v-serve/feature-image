@@ -1,28 +1,22 @@
 import streamlit as st
-import os
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image
+from PIL import ImageDraw
+from PIL import ImageFont
 import io
 
-# Function to process the uploaded image and text based on the selected background color
-def process_image(background_color, uploaded_image, text_input):
-    # Create a copy of the background image
-    back = Image.open(background_color).convert("RGBA")
-
-    # Open the uploaded icon image
-    icon = Image.open(uploaded_image).convert("RGBA")
+# Function to apply code 1 to the image
+def apply_code_1(icon_img, text):
+    back = Image.open("frame.png").convert("RGBA")
 
     # Create a copy of the icon to work with
-    whited_icon = icon.copy()
+    whited_icon = icon_img.copy()
 
-    # Iterate through the pixels of the icon and change non-transparent pixels to white or dark based on the background color
-    for x in range(icon.width):
-        for y in range(icon.height):
+    # Iterate through the pixels of the icon and change non-transparent pixels to white
+    for x in range(icon_img.width):
+        for y in range(icon_img.height):
             r, g, b, a = whited_icon.getpixel((x, y))
             if a > 0:
-                if background_color == "white-frame.png":
-                    whited_icon.putpixel((x, y), (25, 52, 152, a))
-                else:
-                    whited_icon.putpixel((x, y), (255, 255, 255, a))
+                whited_icon.putpixel((x, y), (255, 255, 255, a))
 
     # Resize the modified icon
     whited_icon = whited_icon.resize((250, 250))
@@ -33,13 +27,12 @@ def process_image(background_color, uploaded_image, text_input):
     # Paste the modified icon onto the background at the calculated X-coordinate
     back.paste(whited_icon, (x_centered, 100), whited_icon)
 
-    text_on = text_input
-    font = ImageFont.truetype("IRYekan.ttf", size=60, layout_engine=ImageFont.LAYOUT_RAQM)
+    font = ImageFont.truetype("IRYekan.ttf", size=60, layout_engine=ImageFont.Layout.RAQM)
     I1 = ImageDraw.Draw(back)
 
     lines = []
     current_line = ""
-    for word in text_on.split():
+    for word in text.split():
         if I1.textsize(current_line + word + " ", font=font)[0] > 900:
             lines.append(current_line.strip())
             current_line = ""
@@ -51,35 +44,78 @@ def process_image(background_color, uploaded_image, text_input):
     for line in lines:
         _, _, w, h = I1.textbbox((0, 0), line, font=font)
         x = (back.width - w) / 2
-        if background_color == "white-frame.png":
-            I1.text((x, y - 15), line, fill=(25, 52, 152), font=font, align="center", direction="rtl")
-        else:
-            I1.text((x, y - 15), line, fill=(255, 255, 255), font=font, align="center", direction="rtl")
+        I1.text((x, y - 15), line, fill=(255, 255, 255), font=font, align="center", direction="rtl")
         y += h
 
     return back
 
-# Streamlit UI
-st.title("Image Generator")
-st.write("Upload an icon image and enter text to generate an image with different backgrounds.")
+# Function to apply code 2 to the image
+def apply_code_2(icon_img, text):
+    back = Image.open("white-frame.png").convert("RGBA")
 
-background_color_option = st.radio("Select background color:", ("White", "Dark"))
+    # Create a copy of the icon to work with
+    whited_icon = icon_img.copy()
 
-uploaded_image = st.file_uploader("Upload an icon image:", type=["jpg", "png"])
-text_input = st.text_input("Enter text:")
+    # Iterate through the pixels of the icon and change non-transparent pixels to a dark color
+    for x in range(icon_img.width):
+        for y in range(icon_img.height):
+            r, g, b, a = whited_icon.getpixel((x, y))
+            if a > 0:
+                whited_icon.putpixel((x, y), (25, 52, 152, a))
 
-if uploaded_image is not None and text_input:
-    if background_color_option == "White":
-        background_color = "white-frame.png"
-    else:
-        background_color = "dark-frame.png"
+    # Resize the modified icon
+    whited_icon = whited_icon.resize((250, 250))
 
-    generated_image = process_image(background_color, uploaded_image, text_input)
+    # Calculate the X-coordinate to center the icon horizontally
+    x_centered = (back.width - whited_icon.width) // 2
 
-    st.image(generated_image, caption="Generated Image", use_column_width=True)
+    # Paste the modified icon onto the background at the calculated X-coordinate
+    back.paste(whited_icon, (x_centered, 100), whited_icon)
 
-# To clear cache and prevent image caching issues
-if st.button("Clear Cache"):
-    st.caching.clear_cache()
+    font = ImageFont.truetype("IRYekan.ttf", size=60, layout_engine=ImageFont.Layout.RAQM)
+    I1 = ImageDraw.Draw(back)
 
-st.write("Note: Due to caching, you might need to click 'Clear Cache' after changing the background color or uploading a new image.")
+    lines = []
+    current_line = ""
+    for word in text.split():
+        if I1.textsize(current_line + word + " ", font=font)[0] > 900:
+            lines.append(current_line.strip())
+            current_line = ""
+        current_line += word + " "
+    if current_line:
+        lines.append(current_line.strip())
+
+    y = 375
+    for line in lines:
+        _, _, w, h = I1.textbbox((0, 0), line, font=font)
+        x = (back.width - w) / 2
+        I1.text((x, y - 15), line, fill=(25, 52, 152), font=font, align="center", direction="rtl")
+        y += h
+
+    return back
+
+# Main Streamlit app
+def main():
+    st.title("Image Generator")
+
+    # Upload icon image
+    icon_image = st.file_uploader("Upload Icon Image", type=["jpg", "png", "jpeg"])
+    if icon_image:
+        icon_img = Image.open(icon_image).convert("RGBA")
+
+        # Input text
+        text = st.text_input("Enter Text", "معاملات اسپات چیست؟")
+
+        # Background style selection
+        background_style = st.selectbox("Select Background Style", ["White", "Dark"])
+
+        if st.button("Generate Image"):
+            if background_style == "White":
+                generated_image = apply_code_1(icon_img, text)
+            else:
+                generated_image = apply_code_2(icon_img, text)
+
+            st.image(generated_image, use_column_width=True)
+
+if __name__ == "__main__":
+    main()
