@@ -27,7 +27,7 @@ def apply_code_1(icon_img, text):
     # Paste the modified icon onto the background at the calculated X-coordinate
     back.paste(whited_icon, (x_centered, 100), whited_icon)
 
-    font = ImageFont.truetype("IRYekan.ttf", size=60, layout_engine=ImageFont.Layout.RAQM)
+    font = ImageFont.truetype("IRYekan.ttf", size=60, layout_engine=ImageFont.LAYOUT_RAQM)
     I1 = ImageDraw.Draw(back)
 
     lines = []
@@ -72,7 +72,7 @@ def apply_code_2(icon_img, text):
     # Paste the modified icon onto the background at the calculated X-coordinate
     back.paste(whited_icon, (x_centered, 100), whited_icon)
 
-    font = ImageFont.truetype("IRYekan.ttf", size=60, layout_engine=ImageFont.Layout.RAQM)
+    font = ImageFont.truetype("IRYekan.ttf", size=60, layout_engine=ImageFont.LAYOUT_RAQM)
     I1 = ImageDraw.Draw(back)
 
     lines = []
