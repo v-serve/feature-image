@@ -1,5 +1,6 @@
 import streamlit as st
 from PIL import Image
+import io
 
 # Function to apply watermark to the uploaded image
 def apply_watermark(background_image):
@@ -45,19 +46,39 @@ image_url = st.text_input("Or paste an image URL")
 if uploaded_image is not None:
     background_image = Image.open(uploaded_image).convert("RGBA")
     result = apply_watermark(background_image)
-    st.image(result, use_column_width=True, caption="Watermarked Image")
-    st.markdown("### Download Watermarked Image")
-    st.write("Click the link below to download the watermarked image:")
-    st.download_button("Download Watermarked Image", result.tobytes(), file_name="watermarked_image.png", key="watermarked")
+    # Save the watermarked image to a temporary file
+    temp_buffer = io.BytesIO()
+    result.save(temp_buffer, format="PNG")
+
+    # Display the watermarked image
+    st.image(temp_buffer, caption="Watermarked Image", use_column_width=True)
+
+    # Provide a download link for the watermarked image
+    st.download_button(
+        label="Download Watermarked Image",
+        data=temp_buffer.getvalue(),
+        file_name="watermarked_image.png",
+        key="download-button",
+    )
 
 if image_url:
     try:
         from urllib.request import urlopen
         background_image = Image.open(urlopen(image_url)).convert("RGBA")
         result = apply_watermark(background_image)
-        st.image(result, use_column_width=True, caption="Watermarked Image")
-        st.markdown("### Download Watermarked Image")
-        st.write("Click the link below to download the watermarked image:")
-        st.download_button("Download Watermarked Image", result.tobytes(), file_name="watermarked_image.png", key="watermarked")
+        # Save the watermarked image to a temporary file
+        temp_buffer = io.BytesIO()
+        result.save(temp_buffer, format="PNG")
+
+        # Display the watermarked image
+        st.image(temp_buffer, caption="Watermarked Image", use_column_width=True)
+
+        # Provide a download link for the watermarked image
+        st.download_button(
+            label="Download Watermarked Image",
+            data=temp_buffer.getvalue(),
+            file_name="watermarked_image.png",
+            key="download-button",
+        )
     except Exception as e:
         st.error("Error: Unable to load the image from the provided URL.")
